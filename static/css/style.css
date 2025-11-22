@@ -146,6 +146,27 @@ input[type="file"]:focus {
     color: #6610f2;
 }
 
+/* Dark theme */
+.dark body, body.dark {
+    background-color: #0f1115;
+    color: #e5e7eb;
+}
+body.dark .hero-section {
+    background: linear-gradient(135deg, #1f2937, #0f172a);
+}
+body.dark .form-card,
+body.dark .result-card {
+    background: #12151d;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+}
+body.dark .dropzone {
+    background: linear-gradient(180deg, rgba(18,21,29,0.95), rgba(18,21,29,0.9));
+    border-color: rgba(102,16,242,0.5);
+}
+body.dark .footer {
+    background-color: #0b0d12;
+}
+
 /* Animations */
 @keyframes float-bg {
     0% {
@@ -397,4 +418,32 @@ input[type="file"]:focus {
     background: rgba(0, 200, 110, 0.12);
     border: 1px solid rgba(0, 200, 110, 0.35);
     border-radius: 999px;
+}
+
+/* Toast container */
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1080;
+}
+
+/* Skeletons */
+.skeleton {
+    background: linear-gradient(90deg, rgba(0,0,0,0.05), rgba(0,0,0,0.08), rgba(0,0,0,0.05));
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
 }

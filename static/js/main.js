@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 spinner.classList.remove('d-none');
                 btn.setAttribute('disabled', 'disabled');
             }
+            showToast('Uploading and predicting...', 'info');
         });
     }
 
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const browseBtn = document.getElementById('browse-btn');
 
     function setFileName(name) {
-        if (fileNameEl) fileNameEl.textContent = name || 'No file selected';
+        if (fileNameEl) fileNameEl.textContent = name || 'No files selected';
     }
 
     if (browseBtn && fileInput) {
@@ -53,6 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (e.target && (e.target.id === 'browse-btn' || e.target.closest('#browse-btn'))) return;
             fileInput.click();
         });
+        dropzone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
 
         dropzone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -65,17 +72,19 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             dropzone.classList.remove('dragover');
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-                const file = e.dataTransfer.files[0];
+                // Merge DataTransfer files into the input (not all browsers allow programmatic set for multiple easily)
                 fileInput.files = e.dataTransfer.files;
-                setFileName(file.name);
+                const names = Array.from(e.dataTransfer.files).map(f => f.name).join(', ');
+                setFileName(names);
             }
         });
     }
 
     if (fileInput) {
         fileInput.addEventListener('change', () => {
-            const file = fileInput.files && fileInput.files[0];
-            setFileName(file ? file.name : '');
+            const files = fileInput.files ? Array.from(fileInput.files) : [];
+            const names = files.map(f => f.name).join(', ');
+            setFileName(names || '');
         });
     }
 
@@ -143,6 +152,109 @@ document.addEventListener('DOMContentLoaded', function () {
                 canvas.remove();
             }
         })(start);
+    }
+
+    // Dark mode toggle persisted
+    const themeToggle = document.getElementById('theme-toggle');
+    const applyTheme = (mode) => {
+        if (mode === 'dark') document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
+    };
+    const saved = localStorage.getItem('theme');
+    if (saved) applyTheme(saved);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const next = document.body.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+        });
+    }
+
+    // Confidence badge coloring
+    document.querySelectorAll('.confidence-badge').forEach((el) => {
+        const c = parseFloat(el.getAttribute('data-confidence') || '0');
+        if (c >= 80) {
+            el.style.background = 'rgba(0, 200, 110, 0.12)';
+            el.style.color = '#0b5';
+            el.style.borderColor = 'rgba(0, 200, 110, 0.35)';
+        } else if (c >= 50) {
+            el.style.background = 'rgba(255, 221, 87, 0.15)';
+            el.style.color = '#a67a00';
+            el.style.borderColor = 'rgba(255, 221, 87, 0.4)';
+        } else {
+            el.style.background = 'rgba(255, 107, 107, 0.12)';
+            el.style.color = '#d83a3a';
+            el.style.borderColor = 'rgba(255, 107, 107, 0.35)';
+        }
+    });
+
+    // Download result card as PNG
+    // Download result card(s) as PNG
+    function attachDownloadHandler(btn, targetCard) {
+        btn.addEventListener('click', async () => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            s.onload = async () => {
+                const card = targetCard || document.querySelector('.result-card');
+                if (!card) return;
+                const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2 });
+                const link = document.createElement('a');
+                link.download = 'prediction.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+            document.body.appendChild(s);
+        });
+    }
+    const singleDownloadBtn = document.getElementById('download-card-btn');
+    if (singleDownloadBtn) attachDownloadHandler(singleDownloadBtn);
+    document.querySelectorAll('.download-card-btn').forEach((b) => {
+        const card = b.closest('.result-card');
+        attachDownloadHandler(b, card);
+    });
+
+    // Keyboard shortcuts on predictor page
+    if (form) {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // submit if focused in form area
+                if (document.activeElement && document.activeElement.tagName !== 'TEXTAREA') {
+                    form.requestSubmit();
+                }
+            } else if (e.key === 'Escape') {
+                if (fileInput) {
+                    fileInput.value = '';
+                    setFileName('');
+                }
+            }
+        });
+    }
+
+    // Toast utilities
+    function showToast(message, type = 'info') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${mapType(type)} border-0 show`;
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close"></button></div>`;
+        container.appendChild(toast);
+        const closeBtn = toast.querySelector('.btn-close');
+        if (closeBtn) closeBtn.addEventListener('click', () => toast.remove());
+        setTimeout(() => toast.remove(), 3000);
+    }
+    function mapType(type) {
+        switch (type) {
+            case 'success': return 'success';
+            case 'error': return 'danger';
+            case 'warning': return 'warning';
+            default: return 'primary';
+        }
     }
 });
 
