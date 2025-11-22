@@ -6,54 +6,26 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
-    <title>Disease Prediction</title>
+    <title>Genomic Disease Prediction</title>
 </head>
-<body>
-    <header class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 text-white fw-bold">Genomic Disease Prediction</h1>
-            <p class="text-light lead">Upload your genomic data file to predict potential diseases using advanced AI models.</p>
+<body class="landing-body">
+    <section class="video-hero">
+        <video class="video-bg" autoplay muted loop playsinline poster="">
+            <source src="{{ url_for('static', filename='videos/genomic video.mp4') }}" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+        <div class="video-content text-center">
+            <h1 class="display-5 fw-bold text-white mb-3 animate-fade-up">Predict Genetic Disorders</h1>
+            <p class="text-light lead mb-4 animate-fade-up delay-1">Upload genomic features and let AI assist your screening.</p>
+            <a href="{{ url_for('predictor') }}" class="btn btn-gradient btn-lg btn-cta btn-ripple animate-fade-up delay-2">Let’s Predict Your Disease</a>
         </div>
-    </header>
+    </section>
 
-    <div class="container mt-5">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="mt-3">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        <!-- Upload Form -->
-        <div class="card shadow-lg form-card mx-auto">
-            <div class="card-body text-center">
-                <h2 class="text-primary mb-4">Upload Your Genomic Data</h2>
-                <form action="/predict" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input type="file" name="file" class="form-control custom-file-input" required>
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-gradient btn-lg">Predict</button>
-                    </div>
-                </form>
-                <div class="mt-3">
-                    <a href="/download-sample" class="btn btn-outline-secondary">Download Sample File</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer class="footer text-center mt-5">
+    <footer class="footer text-center">
         <p>© 2025 | Powered by Flask & Machine Learning</p>
     </footer>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

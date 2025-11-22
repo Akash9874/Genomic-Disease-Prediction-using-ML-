@@ -36,22 +36,33 @@ def serve_static(filename):
     """Explicitly serve static files."""
     return send_from_directory(app.static_folder, filename)
 
+@app.route('/static/sample_genomic_data.csv')
+def legacy_sample_file_redirect():
+    # Backward-compatible redirect for older hardcoded sample path
+    return redirect(url_for('static', filename='uploads/sample_genomic_data_fixed.csv'))
+
 @app.route('/')
 def index():
+    # Landing page with video hero and CTA
     return render_template('index.html')
+
+@app.route('/predictor', methods=['GET'])
+def predictor():
+    # Page with upload form and guidance
+    return render_template('predictor.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         if 'file' not in request.files:
             flash('No file part in the request. Please upload a valid file.')
-            return redirect(request.url)
+            return redirect(url_for('predictor'))
 
         file = request.files['file']
 
         if file.filename == '':
             flash('No file selected. Please choose a file to upload.')
-            return redirect(request.url)
+            return redirect(url_for('predictor'))
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -68,35 +79,35 @@ def predict():
             elif len(input_data.shape) == 2:
                 if input_data.shape[1] != 37:
                     flash(f"Invalid input shape. Expected 37 features per row, but got {input_data.shape[1]}.")
-                    return redirect(url_for('index'))
+                    return redirect(url_for('predictor'))
             else:
                 flash('Invalid file format. Please ensure the file matches the model input requirements.')
-                return redirect(url_for('index'))
+                return redirect(url_for('predictor'))
 
             # Make prediction
             prediction = model.predict(input_data)
             predicted_class_index = np.argmax(prediction, axis=1)
             predicted_class = label_encoder.inverse_transform(predicted_class_index)
 
-            return render_template('results.html', prediction=predicted_class[0])
+            confidence = float(np.max(prediction)) if prediction is not None else 0.0
+            return render_template('results.html', prediction=predicted_class[0], confidence=confidence)
 
         else:
             flash('Invalid file type. Allowed file types are CSV and TXT.')
-            return redirect(request.url)
+            return redirect(url_for('predictor'))
 
     except ValueError as e:
         flash(f"ValueError: {e}. Please ensure the file format and data are correct.")
         print(f"ValueError: {e}")
-        return redirect(url_for('index'))
+        return redirect(url_for('predictor'))
     except Exception as e:
         flash(f"An unexpected error occurred: {e}")
         print(f"Unexpected error: {e}")
-        return redirect(url_for('index'))
+        return redirect(url_for('predictor'))
 
 @app.route('/download-sample')
 def download_sample():
-    sample_file = 'static/sample_genomic_data.csv'
-    return redirect(url_for('static', filename='sample_genomic_data.csv'))
+    return send_from_directory('static/uploads', 'sample_genomic_data_fixed.csv', as_attachment=True)
 
 if __name__ == '__main__':
     # Ensure the upload folder exists

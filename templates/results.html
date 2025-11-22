@@ -25,14 +25,34 @@
         {% endwith %}
 
         <!-- Result Card -->
-        <div class="card shadow-lg result-card mx-auto">
+        <div class="card shadow-lg result-card fancy-border mx-auto animate-pop">
             <div class="card-body text-center">
-                <h1 class="text-success fw-bold">Prediction Result</h1>
-                <p class="lead mt-3">The predicted disease is:</p>
-                <h2 class="text-primary fw-bold">{{ prediction }}</h2>
-                <div class="mt-4">
-                    <a href="/" class="btn btn-gradient btn-lg">Go Back</a>
+                <!-- Animated success icon -->
+                <div class="result-icon animate-pop" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                        <circle cx="12" cy="12" r="11" class="icon-circle"></circle>
+                        <path d="M7 12.5l3.5 3.5L17 9.5" class="icon-check"></path>
+                    </svg>
                 </div>
+
+                <h1 class="fw-bold animate-fade-up">Prediction Result</h1>
+                <p class="mt-2 animate-fade-up delay-1 text-muted">The predicted disease is:</p>
+
+                <h2 class="text-primary fw-bold result-reveal animate-fade-up delay-2">{{ prediction }}</h2>
+
+                {% if confidence is not none %}
+                <div class="confidence-badge animate-fade-up delay-3">
+                    Confidence: {{ (confidence * 100) | round(1) }}%
+                </div>
+                {% endif %}
+
+                <div class="mt-4 d-flex gap-2 justify-content-center animate-fade-up delay-3">
+                    <a href="{{ url_for('predictor') }}" class="btn btn-gradient btn-ripple">Predict Another</a>
+                    <button id="copy-prediction-btn" class="btn btn-outline-secondary btn-ripple" data-pred="{{ prediction }}">Copy Result</button>
+                </div>
+
+                <!-- Hidden marker to trigger confetti on load -->
+                <div id="confetti-on-load" class="d-none"></div>
             </div>
         </div>
     </div>
@@ -41,6 +61,7 @@
         <p>© 2025 | Powered by Flask & Machine Learning</p>
     </footer>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
